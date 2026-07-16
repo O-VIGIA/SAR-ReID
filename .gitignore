@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environments and editors
+.venv/
+venv/
+env/
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Datasets and generated partitions
+/data/
+/datasets/AG-VPReID/*.json
+
+# Weights, checkpoints, and experiment output
+*.pt
+*.pth
+*.ckpt
+*.onnx
+/output/
+/checkpoints/
+/logs/
+/runs/
+router_visualization/
+raw_attention.npz
+
+# Packaging
+dist/
+build/
+*.egg-info/
+*.zip
+

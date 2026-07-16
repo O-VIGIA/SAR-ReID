@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the accompanying STAR-CVI manuscript."
+title: "STAR-CVI: Semantic-Axis Routing with Counterfactual View Intervention for Aerial-Ground Video Person Re-Identification"
+type: software
+authors:
+  - name: "STAR-CVI Authors"
+version: 0.1.0
+date-released: 2026-07-16
+preferred-citation:
+  type: article
+  authors:
+    - name: "STAR-CVI Authors"
+  title: "STAR-CVI: Semantic-Axis Routing with Counterfactual View Intervention for Aerial-Ground Video Person Re-Identification"
+  journal: "Manuscript under review"
+  year: 2026
+

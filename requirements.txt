@@ -1,0 +1,16 @@
+# Install torch and torchvision separately to match the local CUDA stack.
+einops>=0.6
+ftfy>=6.1
+kornia>=0.6
+matplotlib>=3.6
+numpy>=1.23
+omegaconf>=2.3
+opencv-python>=4.7
+packaging>=21
+Pillow>=9
+py7zr>=0.20
+PyYAML>=6.0
+regex>=2022.10.31
+tensorboard>=2.10
+tqdm>=4.64
+

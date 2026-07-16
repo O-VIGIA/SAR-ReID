@@ -1,0 +1,20 @@
+MODEL:
+  NAME: "ViT-B-16"
+  COS_LAYER: false
+  NECK: "bnneck"
+  STRIDE_SIZE: [12, 12]
+
+  NON_VIEW_PROMPT:
+    N_CTX_SHARED: 0
+    N_CTX_GROUP: 0
+    TEMPLATE_PREFIX: "a photo of"
+    TEMPLATE_SUFFIX: "."
+    CONTEXT_POSITION: "after_prefix"
+    NUM_DESCRIPTIONS_PER_GROUP: 1
+    DYNAMIC_WEIGHTING: false
+
+INPUT:
+  SIZE_TRAIN: [192, 96]
+
+TEST:
+  NECK_FEAT: "after"

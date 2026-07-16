@@ -1,0 +1,320 @@
+data_cfg:
+  dataset_name: AG-VPReID
+  dataset_root: ./data/AG-VPReID_OpenGait_PKL_192_96
+  num_workers: 1
+  dataset_partition: ./datasets/AG-VPReID/AG_VPReID.json
+  remove_no_gallery: false
+  cache: false
+  test_dataset_name: AG-VPReID
+  data_in_use:
+  - true
+evaluator_cfg:
+  enable_float16: true
+  restore_ckpt_strict: true
+  restore_hint: 40000
+  save_name: STAR-CVI_HumanBasis24_R-CVI
+  eval_func: evaluate_UAV_Ground
+  aerial_platforms: [C4, C5]
+  ground_platforms: [C0, C1, C2, C3]
+  sampler:
+    batch_size: 1
+    sample_type: all_ordered
+    type: InferenceSampler
+    batch_shuffle: false
+    frames_all_limit: 720
+  transform:
+  - type: ClipRgbTransform
+  metric: euc
+  cross_view_gallery: false
+
+
+loss_cfg:
+- loss_term_weight: 1.0
+  margin: 0.2
+  type: TripletLoss
+  log_prefix: triplet
+- loss_term_weight: 1.0
+  scale: 16
+  type: CrossEntropyLoss
+  log_prefix: softmax
+  log_accuracy: true
+- loss_term_weight: 0.1
+  margin: 0.2
+  type: TripletLoss
+  log_prefix: cf_triplet
+- loss_term_weight: 0.2
+  scale: 16
+  type: CrossEntropyLoss
+  log_prefix: cf_softmax
+  log_accuracy: true
+- loss_term_weight: 0.05
+  type: FeatureConsistencyLoss
+  log_prefix: cf_embed_consistency
+  detach_anchor: true
+  channel_dim: 1
+- loss_term_weight: 0.003
+  scale: 1.0
+  type: CrossEntropyLoss
+  log_prefix: z_view_softmax
+  log_accuracy: true
+- loss_term_weight: 0.005
+  scale: 1.0
+  type: CrossEntropyLoss
+  log_prefix: ctx_platform_softmax
+  log_accuracy: true
+- loss_term_weight: 0.001
+  type: PrototypeDiversityLoss
+  log_prefix: id_div
+- loss_term_weight: 0.0005
+  type: PrototypeDiversityLoss
+  log_prefix: context_div
+# - loss_term_weight: 0.02
+#   type: RouterCounterfactualConsistencyLoss
+#   log_prefix: router_cf_consistency
+#   detach_factual: true
+- loss_term_weight: 0.01
+  type: CrossViewSemanticAxisConsistencyLoss
+  log_prefix: xview_axis_consistency
+  detach_target: true
+
+model_cfg:
+  model: STARCVI
+  num_platforms: 6
+  platform_label_offset: 0
+  z_view_loss_enable: true
+  context_platform_loss_enable: true
+  semantic_dictionary_cfg:
+    profile: ag_vpreid_human_basis24_ctx3_v1
+    include_context: true
+    depersonalize_axis_prompt: true
+  SeparateFCs:
+    in_channels: 512
+    out_channels: 256
+    parts_num: 25
+  SeparateBNNecks:
+    class_num: 1606
+    in_channels: 256
+    parts_num: 25
+  text_adapter_cfg:
+    hidden_dim: 128
+    dropout: 0.1
+    init_scale: 0.01
+    use_layernorm: true
+  latent_view_cfg:
+    pool_type: mean
+    hidden_dim: 256
+    dropout: 0.1
+    use_layernorm: true
+  semantic_router_cfg:
+    num_heads: 8
+    mlp_ratio: 4.0
+    attn_drop: 0.0
+    proj_drop: 0.0
+    competition_bias_enable: true
+    competition_bias_scale: 0.35
+    competition_bias_clip: 2.0
+    detach_competition: true
+    semantic_calibration_cfg:
+      type: mha
+      hidden_dim: 256
+      dropout: 0.0
+      init_scale: 0.001
+      max_scale: 0.2
+      use_layernorm: true
+    final_use_shared_patch_prior: false
+    axis_specific_final_bias_enable: true
+    axis_specific_final_bias_scale: 0.15
+    axis_specific_final_bias_clip: 1.5
+    detach_axis_specific_final_bias: true
+
+  token_saliency_cfg:
+    hidden_dim: 256
+    dropout: 0.1
+    init_bias_scale: 0.25
+
+  router_counterfactual_view_intervention_enable: true
+  router_counterfactual_view_intervention_cfg:
+    detach_counterfactual_z: true
+    mix_ratio: 1.0
+
+  cross_view_axis_consistency_enable: true
+
+  cross_frame_enable: true
+  cross_frame_cfg:
+    bottleneck_dim: 128
+    num_heads: 2
+    depth: 1
+    dropout: 0.1
+  class_attention_refiner_enable: true
+  class_attention_refiner_cfg:
+    num_heads: 8
+    mlp_ratio: 4.0
+    attn_drop: 0.1
+    proj_drop: 0.1
+    init_scale: 0.001
+  axis_dropout_cfg:
+    drop_prob: 0.05
+    max_drop_ratio: 0.15
+
+  router_visualization_cfg:
+    enable: false
+    layout: combo
+    save_during_train: true
+    save_during_eval: true
+    train_interval: 2000
+    eval_interval: 1
+    start_step: 0
+    max_events: 6
+    samples_per_event: 1
+    frames_per_sample: 3
+    frame_strategy: uniform
+    attention_stages:
+    - t2v
+    - final
+    id_axes:
+    - id_full_body_silhouette
+    - id_head_shoulder_contour
+    - id_body_proportion
+    - id_upper_body_appearance
+    - id_lower_body_appearance
+    - id_clothing_color_layout
+    - id_backpack_rear_object
+    - id_footwear_appearance
+    context_axes:
+    - ctx_view_platform_scale
+    - ctx_imaging_quality
+    - ctx_scene_interference
+    topk_id: 3
+    topk_context: 2
+    include_shared_prior: true
+    use_query_only_for_paper: false
+    save_raw_attention: true
+    normalization: percentile
+    percentile_low: 1.0
+    percentile_high: 99.5
+    overlay_alpha: 0.26
+    min_visible: 0.12
+    attention_gamma: 0.75
+    tile_width: 160
+    title_height: 48
+    max_columns: 4
+    image_range: clip_norm
+    channel_order: rgb
+    patch_grid: auto_clip
+    patch_size: 16
+    heatmap_interpolation: bicubic
+    save_clean_original: true
+    draw_attention_contour: true
+    contour_percentile: 85.0
+    include_v2t_competition: true
+    include_attention_matrix: true
+    attention_matrix_stages:
+    - t2v
+    - final
+    attention_matrix_attn_type: biased_attn
+    attention_matrix_normalization: percentile
+    attention_matrix_percentile_low: 1.0
+    attention_matrix_percentile_high: 99.5
+    attention_matrix_value_min: 0.0
+    attention_matrix_value_max: 100.0
+    attention_matrix_cmap: turbo
+    attention_matrix_colorbar_ticks:
+    - 0
+    - 25
+    - 50
+    - 75
+    - 100
+    attention_matrix_cell_width: 28
+    attention_matrix_cell_height: 20
+    attention_matrix_show_values: true
+    attention_matrix_value_format: '{:.0f}'
+    attention_matrix_value_font_size: 7
+    attention_matrix_axis_font_size: 8
+    attention_matrix_tick_font_size: 8
+    attention_matrix_axis_label_max_chars: 34
+    attention_matrix_x_tick_step: 5
+    attention_matrix_show_grid: true
+    attention_matrix_save_pdf: false
+
+  axis_competition_cfg:
+    enable: false
+    temperature_id: 0.7
+    temperature_ctx: 0.5
+    mix_ratio_id: 0.15
+    mix_ratio_ctx: 0.1
+    detach_axis_prob: false
+    apply_to_final: true
+    final_mix_ratio_id: 0.05
+    final_mix_ratio_ctx: 0.05
+
+optimizer_cfg:
+  lr: 1.0e-05
+  momentum: 0.9
+  solver: AdamW
+  weight_decay: 0.0005
+  betas:
+  - 0.9
+  - 0.999
+  prompt_lr_multiplier: 2.0
+  head_lr_multiplier: 3.0
+scheduler_cfg:
+  gamma: 0.1
+  milestones:
+  - 15000
+  - 30000
+  scheduler: MultiStepLR
+
+trainer_cfg:
+  find_unused_parameters: true
+  enable_float16: false
+  with_test: true
+  fix_BN: false
+  log_iter: 100
+  restore_ckpt_strict: true
+  optimizer_reset: false
+  scheduler_reset: false
+  restore_hint: 0
+  save_iter: 10000
+  save_name: STAR-CVI_HumanBasis24_R-CVI
+  sync_BN: true
+  total_iter: 40000
+  sampler:
+    batch_shuffle: true
+    batch_size:
+    - 4
+    - 4
+    frames_num_fixed: 10
+    frames_num_max: 50
+    frames_num_min: 25
+    sample_type: fixed_ordered
+    type: TripletSampler
+    frames_skip_num: 4
+  transform:
+  - type: Compose
+    trf_cfg:
+    - type: SequenceAwareColorJitter
+      prob: 0.5
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+    - type: SequenceAwareBoxJitter
+      prob: 0.6
+      max_shift_ratio: 0.06
+      max_scale_ratio: 0.08
+      per_frame_jitter_ratio: 0.0
+    - type: SequenceAwarePerspectiveAffine
+      prob: 0.3
+      max_perspective_ratio: 0.05
+      max_rotate_degree: 6.0
+      max_affine_shift_ratio: 0.04
+    - type: SequenceAwareRandomErasing
+      prob: 0.35
+      sl: 0.03
+      sh: 0.1
+      r1: 0.3
+      per_frame: false
+      per_frame_jitter_ratio: 0.02
+      value: 0.0
+    - type: SequenceAwareHorizontalFlip
+      prob: 0.5
+    - type: ClipRgbTransform
