@@ -1,6 +1,6 @@
-# STAR-CVI
+# SAR-ReID
 
-**Semantic-Axis Routing with Counterfactual View Intervention for Aerial-Ground Video Person Re-Identification**
+** Semantic-Axis Routing for Aerial-Ground Video Person Re-Identification **
 
 [简体中文](README_zh-CN.md) · [Reproducibility notes](docs/REPRODUCIBILITY.md) · [Publishing checklist](docs/PUBLISHING_CHECKLIST.md)
 
